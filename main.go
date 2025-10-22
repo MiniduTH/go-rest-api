@@ -36,14 +36,15 @@ func createEvent(context *gin.Context) {
 	err := context.ShouldBindJSON(&event)
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"message": "could not create event", "error": err})
+		return
 	}
 
-	event.ID = 1
 	event.UserID = 1
 
-	err = models.Event.Save(event)
+	err = event.Save()
 	if err != nil {
-		panic("An error occurred in server")
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "could not save event to database"})
+		return
 	}
 	context.JSON(http.StatusCreated, gin.H{"message": "event created", "event": event})
 

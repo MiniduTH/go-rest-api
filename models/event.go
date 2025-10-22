@@ -16,7 +16,7 @@ type Event struct {
 
 var events = []Event{}
 
-func (e Event) Save() error {
+func (e *Event) Save() error {
 	query := `
 INSERT INTO events (name, description, location, date_time, user_id)
 VALUES (?, ?, ?, ?, ?);`
@@ -27,22 +27,22 @@ VALUES (?, ?, ?, ?, ?);`
 	}
 
 	defer stmt.Close()
-	result, err := stmt.Exec(e.Name, e.Description, e.Location, e.DateTime)
+	result, err := stmt.Exec(e.Name, e.Description, e.Location, e.DateTime, e.UserID)
 	if err != nil {
 		return err
 	}
 
 	id, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
 
 	e.ID = int(id)
-	return err
-
-	events = append(events, e)
 	return nil
 }
 
 func GetAllEvents() ([]Event, error) {
-	query := "SELECT * FROM events"
+	query := "SELECT id, name, description, location, date_time, user_id FROM events"
 	rows, err := db.DB.Query(query)
 	if err != nil {
 		return nil, err
@@ -53,11 +53,12 @@ func GetAllEvents() ([]Event, error) {
 
 	for rows.Next() {
 		var event Event
-		err := rows.Scan(&event.ID, &event.Name, &event.Description, &event.DateTime, &event.UserID)
+		err := rows.Scan(&event.ID, &event.Name, &event.Description, &event.Location, &event.DateTime, &event.UserID)
 		if err != nil {
 			return nil, err
 		}
+		events = append(events, event)
 	}
 
-	return events, nil
+	return events, rows.Err()
 }
