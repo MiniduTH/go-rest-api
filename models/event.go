@@ -2,6 +2,7 @@ package models
 
 import (
 	"REST_API/db"
+	"database/sql"
 	"time"
 )
 
@@ -18,7 +19,7 @@ var events = []Event{}
 
 func (e *Event) Save() error {
 	query := `
-INSERT INTO events (name, description, location, date_time, user_id)
+INSERT INTO events (name, description, location, datetime, user_id)
 VALUES (?, ?, ?, ?, ?);`
 
 	stmt, err := db.DB.Prepare(query)
@@ -42,12 +43,17 @@ VALUES (?, ?, ?, ?, ?);`
 }
 
 func GetAllEvents() ([]Event, error) {
-	query := "SELECT id, name, description, location, date_time, user_id FROM events"
+	query := "SELECT id, name, description, location, datetime, user_id FROM events"
 	rows, err := db.DB.Query(query)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+
+		}
+	}(rows)
 
 	var events []Event
 
